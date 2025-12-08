@@ -1,0 +1,16 @@
+version: "3.9"
+
+services:
+  fyers-swing-bot:
+    build: .
+    container_name: fyers-swing-bot
+    restart: unless-stopped
+    env_file:
+      - ./config/credentials.env
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data
+      - ./config/settings.yaml:/app/config/settings.yaml:ro
+    environment:
+      - PYTHONUNBUFFERED=1
+    working_dir: /app

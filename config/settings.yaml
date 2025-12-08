@@ -1,0 +1,70 @@
+capital: 200000
+risk_per_trade_pct: 1.0
+max_open_positions: 8
+max_portfolio_drawdown_pct: 15.0
+
+universe:
+  type: "static"
+  symbols:
+    - "NSE:RELIANCE-EQ"        # Reliance Industries
+    - "NSE:HDFCBANK-EQ"        # HDFC Bank
+    - "NSE:BHARTIARTL-EQ"      # Bharti Airtel
+    - "NSE:TCS-EQ"             # TCS
+    - "NSE:ICICIBANK-EQ"       # ICICI Bank
+    - "NSE:SBIN-EQ"            # SBI
+    - "NSE:INFY-EQ"            # Infosys
+    - "NSE:BAJFINANCE-EQ"      # Bajaj Finance
+    - "NSE:LT-EQ"              # Larsen & Toubro
+    - "NSE:HINDUNILVR-EQ"      # Hindustan Unilever
+    - "NSE:MARUTI-EQ"          # Maruti Suzuki
+    - "NSE:ITC-EQ"             # ITC
+    - "NSE:M&M-EQ"             # Mahindra & Mahindra
+    - "NSE:HCLTECH-EQ"         # HCL Tech
+    - "NSE:SUNPHARMA-EQ"       # Sun Pharma
+    - "NSE:KOTAKBANK-EQ"       # Kotak Mahindra Bank
+    - "NSE:AXISBANK-EQ"        # Axis Bank
+    - "NSE:ULTRACEMCO-EQ"      # UltraTech Cement
+    - "NSE:TITAN-EQ"           # Titan
+    - "NSE:BAJAJFINSV-EQ"      # Bajaj Finserv
+    - "NSE:ADANIPORTS-EQ"      # Adani Ports
+    - "NSE:NTPC-EQ"            # NTPC
+    - "NSE:ONGC-EQ"            # ONGC
+    - "NSE:BEL-EQ"             # Bharat Electronics
+    - "NSE:ADANIENT-EQ"        # Adani Enterprises
+    - "NSE:ASIANPAINT-EQ"      # Asian Paints
+    - "NSE:JSWSTEEL-EQ"        # JSW Steel
+    - "NSE:WIPRO-EQ"           # Wipro
+    - "NSE:BAJAJ-AUTO-EQ"      # Bajaj Auto
+    - "NSE:POWERGRID-EQ"       # Power Grid
+    - "NSE:NESTLEIND-EQ"       # Nestle India
+    - "NSE:COALINDIA-EQ"       # Coal India
+    - "NSE:TATASTEEL-EQ"       # Tata Steel
+    - "NSE:INDIGO-EQ"          # InterGlobe Aviation
+    - "NSE:SBILIFE-EQ"         # SBI Life Insurance
+    - "NSE:EICHERMOT-EQ"       # Eicher Motors
+    - "NSE:JIOFIN-EQ"          # Jio Financial
+    - "NSE:GRASIM-EQ"          # Grasim
+    - "NSE:HINDALCO-EQ"        # Hindalco
+    - "NSE:HDFCLIFE-EQ"        # HDFC Life
+    - "NSE:SHRIRAMFIN-EQ"      # Shriram Finance
+    - "NSE:TECHM-EQ"           # Tech Mahindra
+    - "NSE:TRENT-EQ"           # Trent
+    - "NSE:TATAMTRDVR-EQ"      # Tata Motors DVR (your sheet says Tata Motors PVeh; if you prefer main, use TATAMOTORS-EQ)
+    - "NSE:CIPLA-EQ"           # Cipla
+    - "NSE:TATACONSUM-EQ"      # Tata Consumer
+    - "NSE:MAXHOSPITAL-EQ"     # Max Healthcare (symbol often MAXHEALTH)
+    - "NSE:DRREDDY-EQ"         # Dr Reddy's
+    - "NSE:APOLLOHOSP-EQ"      # Apollo Hospitals
+
+
+strategy:
+  name: "swing_trend"
+  timeframe: "D"
+  lookback: 100
+  entry:
+    ma_short: 20
+    ma_long: 50
+    min_volume: 200000
+  exit:
+    stop_loss_pct: 5.0
+    take_profit_pct: 12.0

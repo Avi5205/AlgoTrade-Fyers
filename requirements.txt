@@ -1,0 +1,8 @@
+fyers-apiv3
+pandas
+numpy
+ta
+apscheduler
+pyyaml
+requests
+yfinance

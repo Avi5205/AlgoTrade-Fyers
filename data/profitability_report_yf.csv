@@ -1,0 +1,47 @@
+symbol,yf_symbol,latest_close,day_change_pct,week_change_pct,month_change_pct,rating
+NSE:TECHM-EQ,TECHM.NS,1583.9,0.83,3.56,14.22,Strong uptrend (D/W/M all positive)
+NSE:ASIANPAINT-EQ,ASIANPAINT.NS,2950.0,-0.62,2.87,13.04,Uptrend (W & M positive)
+NSE:HCLTECH-EQ,HCLTECH.NS,1687.1,0.24,2.69,11.55,Strong uptrend (D/W/M all positive)
+NSE:WIPRO-EQ,WIPRO.NS,262.03,0.82,4.69,10.8,Strong uptrend (D/W/M all positive)
+NSE:INFY-EQ,INFY.NS,1627.0,0.67,4.03,10.17,Strong uptrend (D/W/M all positive)
+NSE:TCS-EQ,TCS.NS,3255.0,0.52,3.88,8.8,Strong uptrend (D/W/M all positive)
+NSE:SUNPHARMA-EQ,SUNPHARMA.NS,1794.5,-0.6,-0.71,6.1,Sideways / Choppy
+NSE:DRREDDY-EQ,DRREDDY.NS,1275.1,-0.01,1.19,5.78,Uptrend (W & M positive)
+NSE:BHARTIARTL-EQ,BHARTIARTL.NS,2104.0,-0.23,0.68,5.14,Uptrend (W & M positive)
+NSE:HINDALCO-EQ,HINDALCO.NS,830.4,0.87,2.42,5.06,Strong uptrend (D/W/M all positive)
+NSE:MARUTI-EQ,MARUTI.NS,16201.0,-0.5,0.65,4.66,Uptrend (W & M positive)
+NSE:SHRIRAMFIN-EQ,SHRIRAMFIN.NS,853.6,-0.15,0.24,4.56,Uptrend (W & M positive)
+NSE:AXISBANK-EQ,AXISBANK.NS,1278.3,-0.33,0.2,4.54,Uptrend (W & M positive)
+NSE:RELIANCE-EQ,RELIANCE.NS,1545.0,0.29,-1.35,4.53,Sideways / Choppy
+NSE:EICHERMOT-EQ,EICHERMOT.NS,7184.0,-0.33,0.82,4.33,Uptrend (W & M positive)
+NSE:ADANIPORTS-EQ,ADANIPORTS.NS,1502.2,-0.48,-1.85,3.72,Sideways / Choppy
+NSE:HDFCLIFE-EQ,HDFCLIFE.NS,776.3,1.04,1.25,3.61,Strong uptrend (D/W/M all positive)
+NSE:LT-EQ,LT.NS,4021.4,-0.42,-1.27,3.58,Sideways / Choppy
+NSE:ICICIBANK-EQ,ICICIBANK.NS,1386.6,-0.42,-0.25,3.25,Sideways / Choppy
+NSE:KOTAKBANK-EQ,KOTAKBANK.NS,2152.3,-0.12,0.22,3.06,Uptrend (W & M positive)
+NSE:HDFCBANK-EQ,HDFCBANK.NS,998.6,-0.47,-0.35,1.66,Sideways / Choppy
+NSE:SBILIFE-EQ,SBILIFE.NS,2026.3,0.13,2.77,1.37,Strong uptrend (D/W/M all positive)
+NSE:SBIN-EQ,SBIN.NS,968.25,-0.33,-0.5,1.3,Sideways / Choppy
+NSE:GRASIM-EQ,GRASIM.NS,2759.5,0.46,1.03,1.28,Strong uptrend (D/W/M all positive)
+NSE:JIOFIN-EQ,JIOFIN.NS,302.95,-0.26,-0.59,1.22,Sideways / Choppy
+NSE:TITAN-EQ,TITAN.NS,3813.2,-0.0,-2.1,1.16,Sideways / Choppy
+NSE:CIPLA-EQ,CIPLA.NS,1512.6,-0.54,-0.69,0.46,Sideways / Choppy
+NSE:COALINDIA-EQ,COALINDIA.NS,377.6,-0.62,-0.54,0.43,Sideways / Choppy
+NSE:M&M-EQ,M&M.NS,3703.3,-0.37,-1.02,0.35,Sideways / Choppy
+NSE:POWERGRID-EQ,POWERGRID.NS,268.3,-0.56,-0.5,0.3,Sideways / Choppy
+NSE:ITC-EQ,ITC.NS,403.7,-0.31,-0.14,-0.09,Consistent downtrend
+NSE:TATACONSUM-EQ,TATACONSUM.NS,1162.5,-0.03,-0.11,-0.4,Consistent downtrend
+NSE:BAJAJFINSV-EQ,BAJAJFINSV.NS,2088.7,-0.37,0.33,-0.64,Short-term bounce in downtrend
+NSE:JSWSTEEL-EQ,JSWSTEEL.NS,1160.7,-0.13,-0.66,-0.94,Consistent downtrend
+NSE:NTPC-EQ,NTPC.NS,321.35,-0.6,-1.76,-1.46,Consistent downtrend
+NSE:NESTLEIND-EQ,NESTLEIND.NS,1236.9,-0.8,-1.88,-2.04,Consistent downtrend
+NSE:ULTRACEMCO-EQ,ULTRACEMCO.NS,11601.0,0.03,-0.52,-2.09,Short-term bounce in downtrend
+NSE:ONGC-EQ,ONGC.NS,240.72,-0.21,-1.68,-2.21,Consistent downtrend
+NSE:BEL-EQ,BEL.NS,404.2,-0.66,-3.13,-2.43,Consistent downtrend
+NSE:BAJFINANCE-EQ,BAJFINANCE.NS,1037.7,-0.98,1.63,-2.71,Short-term bounce in downtrend
+NSE:HINDUNILVR-EQ,HINDUNILVR.NS,2335.7,-0.12,-5.23,-3.24,Consistent downtrend
+NSE:ADANIENT-EQ,ADANIENT.NS,2255.6,-0.43,-0.28,-4.8,Consistent downtrend
+NSE:APOLLOHOSP-EQ,APOLLOHOSP.NS,7199.5,0.14,-1.21,-5.79,Short-term bounce in downtrend
+NSE:INDIGO-EQ,INDIGO.NS,5174.5,-3.65,-10.69,-7.33,Consistent downtrend
+NSE:TATASTEEL-EQ,TATASTEEL.NS,167.68,0.34,-0.56,-7.55,Short-term bounce in downtrend
+NSE:TRENT-EQ,TRENT.NS,4172.1,-0.26,-1.04,-9.84,Consistent downtrend
