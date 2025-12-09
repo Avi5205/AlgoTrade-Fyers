@@ -1,4 +1,4 @@
 symbol,exchange,name,fyers_symbol,cmp,entry_low,entry_high,recommended_entry,stop_loss,target1,target2,risk_per_share,qty,capital_required,risk_on_trade,rr_to_target2,fundamental_score,technical_score,total_score,risk_flag,trend_label,recommendation_time
-SYNCOMF,NSE,Syncom Formul.,NSE:SYNCOMF-EQ,15.02,14.27,15.32,15.02,12.02,16.82,18.77,3.0,8,120.16,24.0,1.25,13.0,0.0,13.0,Medium,No trend (no EOD data),2025-12-08T17:59:35
-BTML,NSE,Bodhi Tree,NSE:BTML-EQ,8.59,8.16,8.76,8.59,6.87,9.62,10.74,1.72,14,120.26,24.08,1.25,12.0,0.0,12.0,High,No trend (no EOD data),2025-12-08T17:59:35
-PREMIERPOLYFILM,NSE,Premier Polyfilm,NSE:PREMIERPOL-EQ,44.4,42.18,45.29,44.4,35.52,49.73,55.5,8.88,2,88.8,17.76,1.25,12.0,0.0,12.0,High,No trend (no EOD data),2025-12-08T17:59:35
+SYNCOMF,NSE,Syncom Formul.,NSE:SYNCOMF-EQ,15.02,14.27,15.32,15.02,12.02,16.82,18.77,3.0,8,120.16,24.0,1.25,13.0,0.0,13.0,Medium,No trend (no EOD data),2025-12-09T10:35:03
+BTML,NSE,Bodhi Tree,NSE:BTML-EQ,8.59,8.16,8.76,8.59,6.87,9.62,10.74,1.72,14,120.26,24.08,1.25,12.0,0.0,12.0,High,No trend (no EOD data),2025-12-09T10:35:03
+PREMIERPOLYFILM,NSE,Premier Polyfilm,PREMIERPOL,44.4,42.18,45.29,44.4,35.52,49.73,55.5,8.88,2,88.8,17.76,1.25,12.0,0.0,12.0,High,No trend (no EOD data),2025-12-09T10:35:03

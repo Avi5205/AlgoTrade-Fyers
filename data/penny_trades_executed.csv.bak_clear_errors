@@ -4,8 +4,3 @@ executed_date,executed_time,symbol,fyers_symbol,side,qty,price,status,raw_respon
 2025-12-08,2025-12-08T18:05:34,PREMIERPOLYFILM,NSE:PREMIERPOL-EQ,BUY,2,44.4,ok,"{'code': 1101, 'message': 'Successfully placed order', 's': 'ok', 'id': '25120800403272'}"
 2025-12-09,2025-12-09T10:39:09,SYNCOMF,NSE:SYNCOMF-EQ,BUY,8,15.02,ok,"{'code': 1101, 'message': 'Successfully placed order', 's': 'ok', 'id': '25120900178715'}"
 2025-12-09,2025-12-09T10:39:09,BTML,NSE:BTML-EQ,BUY,14,8.59,ok,"{'code': 1101, 'message': 'Successfully placed order', 's': 'ok', 'id': '25120900178723'}"
-2025-12-09,2025-12-09T14:56:59,PREMIERPOLYFILM,PREMIERPOL,BUY,2,44.4,error,"{'code': -50, 'message': 'The input symbol is invalid.', 's': 'error'}"
-2025-12-09,2025-12-09T14:58:00,PREMIERPOLYFILM,PREMIERPOL,BUY,2,44.4,error,"{'code': -50, 'message': 'The input symbol is invalid.', 's': 'error'}"
-2025-12-09,2025-12-09T14:59:01,PREMIERPOLYFILM,PREMIERPOL,BUY,2,44.4,error,"{'code': -50, 'message': 'The input symbol is invalid.', 's': 'error'}"
-2025-12-09,2025-12-09T15:00:02,PREMIERPOLYFILM,PREMIERPOL,BUY,2,44.4,error,"{'code': -50, 'message': 'The input symbol is invalid.', 's': 'error'}"
-2025-12-09,2025-12-09T15:01:03,PREMIERPOLYFILM,PREMIERPOL,BUY,2,44.4,error,"{'code': -50, 'message': 'The input symbol is invalid.', 's': 'error'}"

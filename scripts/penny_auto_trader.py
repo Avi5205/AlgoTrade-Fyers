@@ -194,10 +194,15 @@ class PennyAutoTrader:
 
             price = float(row.get("recommended_entry") or row.get("cmp") or 0.0)
             if price <= 0:
-                logging.warning(
-                    "Non-positive price for %s (got %s); skipping auto-trade.",
-                    symbol,
+                logging.warning("Non-positive price %.2f for %s; skipping auto-trade.", price, symbol)
+                continue
+
+            # Only trade stocks with price strictly between 100 and 500
+            if not (100 < price < 500):
+                logging.info(
+                    "Price %.2f for %s is outside range 100–500; skipping.",
                     price,
+                    symbol,
                 )
                 continue
 

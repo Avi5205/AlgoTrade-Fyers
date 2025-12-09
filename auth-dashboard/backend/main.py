@@ -1,11 +1,10 @@
-# auth-dashboard/backend/main.py
 from __future__ import annotations
 
 import os
 import subprocess
 from pathlib import Path
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, List
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -13,7 +12,8 @@ from pydantic import BaseModel
 
 from fyers_apiv3 import fyersModel
 
-BASE_DIR = Path(__file__).resolve().parents[2]  # .../fyers-swing-docker
+# BASE_DIR -> /.../fyers-swing-docker
+BASE_DIR = Path(__file__).resolve().parents[2]
 CREDENTIALS_FILE = BASE_DIR / "config" / "credentials.env"
 
 
@@ -26,15 +26,12 @@ class FyersConfig:
 
 
 def load_dotenv_like(path: Path) -> dict:
-    """Very small parser for KEY=VALUE lines (no export, no quotes)."""
     env: dict[str, str] = {}
     if not path.exists():
         return env
     for line in path.read_text().splitlines():
         line = line.strip()
-        if not line or line.startswith("#"):
-            continue
-        if "=" not in line:
+        if not line or line.startswith("#") or "=" not in line:
             continue
         key, value = line.split("=", 1)
         env[key.strip()] = value.strip()
@@ -42,10 +39,6 @@ def load_dotenv_like(path: Path) -> dict:
 
 
 def get_fyers_config() -> FyersConfig:
-    """
-    Load FYERS config from environment variables first.
-    If missing, fall back to credentials.env in the project root.
-    """
     file_env = load_dotenv_like(CREDENTIALS_FILE)
 
     def get(key: str, default: str | None = None) -> str | None:
@@ -80,10 +73,6 @@ def get_fyers_config() -> FyersConfig:
 
 
 def write_access_token(path: Path, new_token: str) -> None:
-    """
-    Update only FYERS_ACCESS_TOKEN line in credentials.env.
-    Preserve all other lines as-is. If not present, append at the end.
-    """
     lines: list[str] = []
     if path.exists():
         lines = path.read_text().splitlines()
@@ -102,47 +91,57 @@ def write_access_token(path: Path, new_token: str) -> None:
 
     if not found:
         if new_lines and new_lines[-1].strip():
-            new_lines.append("")  # blank line before appending
+            new_lines.append("")
         new_lines.append(new_line)
 
     path.write_text("\n".join(new_lines) + "\n")
 
 
-# def get_fyers_config() -> dict[str, str]:
-#     env = read_env(ENV_PATH)
-#     required = ["FYERS_CLIENT_ID", "FYERS_SECRET_KEY", "FYERS_REDIRECT_URI", "FYERS_APP_ID_TYPE"]
-#     missing = [k for k in required if not env.get(k)]
-#     if missing:
-#         raise RuntimeError(f"Missing keys in credentials.env: {', '.join(missing)}")
-#     return env
-
-
 def restart_docker_services() -> str:
-    """
-    Restart only the trading-related containers so they pick up the new token.
-    Assumes this script is run on the host machine with docker available.
-    """
     try:
-        # Run from project root
-        completed = subprocess.run(
+        cp = subprocess.run(
             ["docker", "compose", "up", "-d", "fyers-swing-bot", "penny-trader"],
             cwd=str(BASE_DIR),
             capture_output=True,
             text=True,
             check=True,
         )
-        return completed.stdout.strip()
+        return cp.stdout.strip()
     except subprocess.CalledProcessError as exc:
         raise RuntimeError(
             f"Failed to restart Docker services: {exc.stderr or exc.stdout}"
         ) from exc
 
 
+def run_scanner_job() -> subprocess.CompletedProcess:
+    """
+    Run the penny scanner inside fyers-swing-bot:
+      docker compose run --rm fyers-swing-bot python scripts/penny_scanner.py
+    """
+    try:
+        cp = subprocess.run(
+            [
+                "docker",
+                "compose",
+                "run",
+                "--rm",
+                "fyers-swing-bot",
+                "python",
+                "scripts/penny_scanner.py",
+            ],
+            cwd=str(BASE_DIR),
+            capture_output=True,
+            text=True,
+        )
+        return cp
+    except FileNotFoundError as exc:
+        raise RuntimeError("docker not found on PATH") from exc
+
+
 # ---------- FastAPI app ----------
 
 app = FastAPI(title="FYERS Auth Dashboard API")
 
-# Allow Vite dev server origin
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -186,13 +185,43 @@ class ProfileResponse(BaseModel):
     raw: dict
 
 
+class RecommendationsResponse(BaseModel):
+    rows: List[dict]
+
+
+class ExecutedTradesResponse(BaseModel):
+    rows: List[dict]
+
+
+class ClearExecutedResponse(BaseModel):
+    message: str
+    removed_rows: int
+
+
+class PlaceOrderRequest(BaseModel):
+    fyers_symbol: str
+    side: str  # BUY / SELL
+    qty: int
+
+
+class PlaceOrderResponse(BaseModel):
+    ok: bool
+    message: str
+    raw: dict
+
+
+class RunScannerResponse(BaseModel):
+    ok: bool
+    message: str
+    stdout: Optional[str] = None
+    stderr: Optional[str] = None
+    return_code: int
+
+
 # ---------- Endpoints ----------
 
 @app.get("/api/auth-url", response_model=AuthUrlResponse)
 def generate_auth_url() -> AuthUrlResponse:
-    """
-    Generate FYERS login URL using credentials from credentials.env.
-    """
     cfg = get_fyers_config()
 
     session = fyersModel.SessionModel(
@@ -202,16 +231,12 @@ def generate_auth_url() -> AuthUrlResponse:
         response_type="code",
         grant_type="authorization_code",
     )
-
     login_url = session.generate_authcode()
     return AuthUrlResponse(login_url=login_url)
 
 
 @app.post("/api/exchange", response_model=ExchangeResponse)
 def exchange_auth_code(body: ExchangeRequest) -> ExchangeResponse:
-    """
-    Exchange auth_code for access_token/refresh_token.
-    """
     cfg = get_fyers_config()
 
     session = fyersModel.SessionModel(
@@ -245,9 +270,6 @@ def exchange_auth_code(body: ExchangeRequest) -> ExchangeResponse:
 
 @app.post("/api/save-token", response_model=SaveTokenResponse)
 def save_token(body: SaveTokenRequest) -> SaveTokenResponse:
-    """
-    Save access_token into credentials.env and optionally restart Docker services.
-    """
     token = body.access_token.strip()
     if not token:
         raise HTTPException(status_code=400, detail="access_token must not be empty")
@@ -269,9 +291,6 @@ def save_token(body: SaveTokenRequest) -> SaveTokenResponse:
 
 @app.get("/api/test-profile", response_model=ProfileResponse)
 def test_profile() -> ProfileResponse:
-    """
-    Use current FYERS_ACCESS_TOKEN from credentials.env to call get_profile().
-    """
     cfg = get_fyers_config()
     file_env = load_dotenv_like(CREDENTIALS_FILE)
     token = os.getenv("FYERS_ACCESS_TOKEN") or file_env.get("FYERS_ACCESS_TOKEN")
@@ -289,3 +308,118 @@ def test_profile() -> ProfileResponse:
     msg = "Authenticated OK" if ok else f"Auth failed: {resp.get('message', 'Unknown error')}"
 
     return ProfileResponse(ok=ok, message=msg, raw=resp)
+
+
+@app.get("/api/recommendations", response_model=RecommendationsResponse)
+def list_recommendations() -> RecommendationsResponse:
+    import pandas as pd
+
+    path = BASE_DIR / "data" / "penny_recommendations.csv"
+    if not path.exists():
+        return RecommendationsResponse(rows=[])
+
+    df = pd.read_csv(path)
+    return RecommendationsResponse(rows=df.to_dict(orient="records"))
+
+
+@app.get("/api/executed", response_model=ExecutedTradesResponse)
+def list_executed() -> ExecutedTradesResponse:
+    import pandas as pd
+
+    path = BASE_DIR / "data" / "penny_trades_executed.csv"
+    if not path.exists():
+        return ExecutedTradesResponse(rows=[])
+
+    df = pd.read_csv(path)
+    return ExecutedTradesResponse(rows=df.to_dict(orient="records"))
+
+
+@app.post("/api/clear-error-executions", response_model=ClearExecutedResponse)
+def clear_error_executions() -> ClearExecutedResponse:
+    """
+    Keep only successful/OK executions in penny_trades_executed.csv.
+    """
+    import pandas as pd
+
+    path = BASE_DIR / "data" / "penny_trades_executed.csv"
+    if not path.exists():
+        return ClearExecutedResponse(message="File not found; nothing to clear.", removed_rows=0)
+
+    df = pd.read_csv(path)
+    if "status" not in df.columns:
+        return ClearExecutedResponse(message="No 'status' column; nothing to clear.", removed_rows=0)
+
+    before = len(df)
+    keep_mask = df["status"].astype(str).str.lower().isin(["ok", "success", "filled", "completed"])
+    df_clean = df[keep_mask].copy()
+    removed = before - len(df_clean)
+    df_clean.to_csv(path, index=False)
+
+    return ClearExecutedResponse(
+        message=f"Removed {removed} non-success rows; kept {len(df_clean)} successful executions.",
+        removed_rows=removed,
+    )
+
+
+@app.post("/api/place-order", response_model=PlaceOrderResponse)
+def place_order(body: PlaceOrderRequest) -> PlaceOrderResponse:
+    cfg = get_fyers_config()
+    file_env = load_dotenv_like(CREDENTIALS_FILE)
+    token = os.getenv("FYERS_ACCESS_TOKEN") or file_env.get("FYERS_ACCESS_TOKEN")
+
+    if not token:
+        raise HTTPException(
+            status_code=400,
+            detail="FYERS_ACCESS_TOKEN missing in credentials.env",
+        )
+
+    fy = fyersModel.FyersModel(client_id=cfg.client_id, token=token)
+
+    side = body.side.upper()
+    if side not in ("BUY", "SELL"):
+        raise HTTPException(status_code=400, detail="side must be BUY or SELL")
+
+    order = {
+        "symbol": body.fyers_symbol.strip(),
+        "qty": int(body.qty),
+        "type": 2,  # market
+        "side": 1 if side == "BUY" else -1,
+        "productType": "CNC",
+        "limitPrice": 0,
+        "stopPrice": 0,
+        "validity": "DAY",
+        "disclosedQty": 0,
+        "offlineOrder": False,
+        "orderTag": "dashboard",
+    }
+
+    resp = fy.place_order(order)
+    ok = str(resp.get("s", "")).lower() == "ok"
+
+    return PlaceOrderResponse(
+        ok=ok,
+        message=resp.get("message", ""),
+        raw=resp,
+    )
+
+
+@app.post("/api/run-scanner", response_model=RunScannerResponse)
+def run_scanner() -> RunScannerResponse:
+    """
+    Run scripts/penny_scanner.py inside fyers-swing-bot via docker compose.
+    """
+    try:
+        cp = run_scanner_job()
+    except RuntimeError as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+    ok = cp.returncode == 0
+    msg = "Scanner completed successfully." if ok else "Scanner failed."
+
+    return RunScannerResponse(
+        ok=ok,
+        message=msg,
+        stdout=cp.stdout or "",
+        stderr=cp.stderr or "",
+        return_code=cp.returncode,
+    )

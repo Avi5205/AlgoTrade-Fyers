@@ -1,266 +1,573 @@
 import { useState } from "react";
+import "./App.css";
 
-const API_BASE = "http://localhost:8000/api";
+const API_BASE = "http://127.0.0.1:8000";
+
+async function apiCall(path, options = {}) {
+  const res = await fetch(`${API_BASE}${path}`, {
+    headers: { "Content-Type": "application/json" },
+    ...options,
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    const detail = data?.detail ?? res.statusText;
+    throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
+  }
+  return data;
+}
 
 function App() {
+  const [loading, setLoading] = useState(null);
+  const [errorMsg, setErrorMsg] = useState("");
+
   const [loginUrl, setLoginUrl] = useState("");
   const [authCode, setAuthCode] = useState("");
-  const [accessToken, setAccessToken] = useState("");
-  const [refreshToken, setRefreshToken] = useState("");
-  const [profileResp, setProfileResp] = useState(null);
-  const [status, setStatus] = useState("");
+  const [tokenResponse, setTokenResponse] = useState(null);
+  const [savedTokenInfo, setSavedTokenInfo] = useState(null);
+  const [profileInfo, setProfileInfo] = useState(null);
+  const [recoRows, setRecoRows] = useState([]);
+  const [execRows, setExecRows] = useState([]);
+  const [clearExecInfo, setClearExecInfo] = useState(null);
+  const [orderForm, setOrderForm] = useState({
+    fyers_symbol: "",
+    side: "BUY",
+    qty: 1,
+  });
+  const [orderResult, setOrderResult] = useState(null);
+  const [scannerResult, setScannerResult] = useState(null);
 
-  async function generateAuthUrl() {
+  const isBusy = (key) => loading === key;
+  const clearLoading = () => setLoading(null);
+
+  const handleGenerateAuthUrl = async () => {
     try {
-      setStatus("Generating login URL...");
-      const res = await fetch(`${API_BASE}/auth-url`);
-      if (!res.ok) {
-        throw new Error(await res.text());
-      }
-      const data = await res.json();
+      setErrorMsg("");
+      setTokenResponse(null);
+      setSavedTokenInfo(null);
+      setProfileInfo(null);
+      setLoading("auth-url");
+      const data = await apiCall("/api/auth-url");
       setLoginUrl(data.login_url);
-      setStatus("Login URL generated. Open it in a new tab and complete FYERS login.");
     } catch (err) {
-      setStatus(`Error generating login URL: ${err.message || String(err)}`);
+      setErrorMsg(err.message);
+    } finally {
+      clearLoading();
     }
-  }
+  };
 
-  async function exchangeAuthCode() {
+  const handleExchangeCode = async () => {
     try {
-      if (!authCode.trim()) {
-        setStatus("Please paste auth_code first.");
-        return;
-      }
-      setStatus("Exchanging auth_code for token...");
-      const res = await fetch(`${API_BASE}/exchange`, {
+      setErrorMsg("");
+      setLoading("exchange");
+      setTokenResponse(null);
+      const data = await apiCall("/api/exchange", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ auth_code: authCode.trim() }),
+        body: JSON.stringify({ auth_code: authCode }),
       });
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(text);
-      }
-      const data = await res.json();
-      setAccessToken(data.access_token);
-      setRefreshToken(data.refresh_token || "");
-      setStatus("Token exchange successful. You can now save the token.");
+      setTokenResponse(data);
     } catch (err) {
-      setStatus(`Error exchanging auth_code: ${err.message || String(err)}`);
+      setErrorMsg(err.message);
+    } finally {
+      clearLoading();
     }
-  }
+  };
 
-  async function saveTokenAndRestart() {
+  const handleSaveToken = async () => {
+    if (!tokenResponse?.access_token) {
+      setErrorMsg("No access_token to save. Exchange code first.");
+      return;
+    }
     try {
-      if (!accessToken.trim()) {
-        setStatus("No access_token to save. Exchange auth_code first.");
-        return;
-      }
-      setStatus("Saving token and restarting Docker services...");
-      const res = await fetch(`${API_BASE}/save-token`, {
+      setErrorMsg("");
+      setLoading("save-token");
+      const data = await apiCall("/api/save-token", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          access_token: accessToken.trim(),
+          access_token: tokenResponse.access_token,
           restart_docker: true,
         }),
       });
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(text);
-      }
-      const data = await res.json();
-      setStatus(
-        data.message + (data.docker_output ? `\n${data.docker_output}` : "")
-      );
+      setSavedTokenInfo(data);
     } catch (err) {
-      setStatus(`Error saving token: ${err.message || String(err)}`);
+      setErrorMsg(err.message);
+    } finally {
+      clearLoading();
     }
-  }
+  };
 
-  async function testProfile() {
+  const handleTestProfile = async () => {
     try {
-      setStatus("Testing FYERS profile using current token...");
-      const res = await fetch(`${API_BASE}/test-profile`);
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(text);
-      }
-      const data = await res.json();
-      setProfileResp(data);
-      setStatus(data.message);
+      setErrorMsg("");
+      setLoading("profile");
+      const data = await apiCall("/api/test-profile");
+      setProfileInfo(data);
     } catch (err) {
-      setStatus(`Error testing profile: ${err.message || String(err)}`);
+      setErrorMsg(err.message);
+    } finally {
+      clearLoading();
     }
-  }
+  };
+
+  const handleLoadRecommendations = async () => {
+    try {
+      setErrorMsg("");
+      setLoading("reco");
+      const data = await apiCall("/api/recommendations");
+      setRecoRows(data.rows || []);
+    } catch (err) {
+      setErrorMsg(err.message);
+    } finally {
+      clearLoading();
+    }
+  };
+
+  const handleLoadExecuted = async () => {
+    try {
+      setErrorMsg("");
+      setLoading("exec");
+      const data = await apiCall("/api/executed");
+      setExecRows(data.rows || []);
+    } catch (err) {
+      setErrorMsg(err.message);
+    } finally {
+      clearLoading();
+    }
+  };
+
+  const handleClearErrorExec = async () => {
+    try {
+      setErrorMsg("");
+      setLoading("clear-exec");
+      const data = await apiCall("/api/clear-error-executions", {
+        method: "POST",
+      });
+      setClearExecInfo(data);
+      const refreshed = await apiCall("/api/executed");
+      setExecRows(refreshed.rows || []);
+    } catch (err) {
+      setErrorMsg(err.message);
+    } finally {
+      clearLoading();
+    }
+  };
+
+  const handleOrderFormChange = (field, value) => {
+    setOrderForm((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const handlePlaceOrder = async () => {
+    try {
+      setErrorMsg("");
+      setOrderResult(null);
+      setLoading("place-order");
+      const payload = {
+        fyers_symbol: orderForm.fyers_symbol.trim(),
+        side: orderForm.side,
+        qty: Number(orderForm.qty) || 0,
+      };
+      const data = await apiCall("/api/place-order", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+      setOrderResult(data);
+    } catch (err) {
+      setErrorMsg(err.message);
+    } finally {
+      clearLoading();
+    }
+  };
+
+  const handleRunScanner = async () => {
+    try {
+      setErrorMsg("");
+      setScannerResult(null);
+      setLoading("scanner");
+      const data = await apiCall("/api/run-scanner", {
+        method: "POST",
+      });
+      setScannerResult(data);
+    } catch (err) {
+      setErrorMsg(err.message);
+    } finally {
+      clearLoading();
+    }
+  };
 
   return (
-    <div
-      style={{
-        maxWidth: 900,
-        margin: "0 auto",
-        padding: "1.5rem",
-        fontFamily: "system-ui, sans-serif",
-      }}
-    >
-      <h1>FYERS Swing Bot – Auth Dashboard</h1>
-      <p style={{ color: "#555" }}>
-        Use this page to generate a login URL, exchange <code>auth_code</code>,
-        save the new token to <code>credentials.env</code>, restart Docker
-        services, and verify authentication.
-      </p>
+    <div className="App">
+      <header className="app-header">
+        <h1>FYERS Auth & Control Dashboard</h1>
+        <p className="subtitle">
+          Simplified re-authentication, diagnostics, and manual controls for your
+          fyers-swing-docker stack.
+        </p>
+      </header>
 
-      {/* 1. Generate login URL */}
-      <section
-        style={{
-          marginTop: "2rem",
-          padding: "1rem",
-          border: "1px solid #ddd",
-          borderRadius: 8,
-        }}
-      >
-        <h2>1. Generate FYERS Login URL</h2>
-        <button onClick={generateAuthUrl}>Generate Login URL</button>
-        {loginUrl && (
-          <div style={{ marginTop: "1rem" }}>
-            <div>Login URL:</div>
-            <textarea
-              readOnly
-              value={loginUrl}
-              style={{ width: "100%", height: 80, fontFamily: "monospace" }}
-            />
-            <p>
-              Open this URL in a new tab, complete the FYERS login and 2FA, then
-              copy the <code>auth_code</code> from the redirect URL.
-            </p>
-          </div>
-        )}
-      </section>
+      {errorMsg && (
+        <div className="alert alert-error">
+          <strong>Error: </strong> {errorMsg}
+        </div>
+      )}
 
-      {/* 2. auth_code -> token */}
-      <section
-        style={{
-          marginTop: "2rem",
-          padding: "1rem",
-          border: "1px solid #ddd",
-          borderRadius: 8,
-        }}
-      >
-        <h2>2. Paste auth_code and Exchange</h2>
-        <label>
-          auth_code from FYERS redirect URL:
+      {/* Row 1: Auth Flow */}
+      <div className="grid">
+        <section className="card">
+          <h2>1. Generate Login URL</h2>
+          <p>
+            Uses <code>credentials.env</code> to create the FYERS login URL.
+          </p>
+          <button
+            className="btn btn-primary"
+            onClick={handleGenerateAuthUrl}
+            disabled={isBusy("auth-url")}
+          >
+            {isBusy("auth-url") ? "Generating..." : "Generate Login URL"}
+          </button>
+          {loginUrl && (
+            <div className="panel">
+              <p>Open this URL in your browser and complete FYERS login.</p>
+              <textarea
+                className="mono"
+                rows={3}
+                readOnly
+                value={loginUrl}
+              />
+            </div>
+          )}
+        </section>
+
+        <section className="card">
+          <h2>2. Paste Auth Code</h2>
+          <p>
+            After login, you will be redirected to your{" "}
+            <code>FYERS_REDIRECT_URI</code>. Copy the <code>auth_code</code>{" "}
+            query parameter and paste it here.
+          </p>
           <textarea
+            className="mono"
+            rows={4}
             value={authCode}
             onChange={(e) => setAuthCode(e.target.value)}
-            style={{
-              width: "100%",
-              height: 80,
-              fontFamily: "monospace",
-              marginTop: 8,
-            }}
+            placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
           />
-        </label>
-        <div style={{ marginTop: "0.75rem" }}>
-          <button onClick={exchangeAuthCode}>Exchange auth_code for token</button>
-        </div>
-
-        {accessToken && (
-          <div style={{ marginTop: "1rem" }}>
-            <div>Access token (will be saved to credentials.env):</div>
-            <textarea
-              readOnly
-              value={accessToken}
-              style={{ width: "100%", height: 80, fontFamily: "monospace" }}
-            />
-          </div>
-        )}
-        {refreshToken && (
-          <div style={{ marginTop: "0.5rem" }}>
-            <div>Refresh token (for future use if needed):</div>
-            <textarea
-              readOnly
-              value={refreshToken}
-              style={{ width: "100%", height: 60, fontFamily: "monospace" }}
-            />
-          </div>
-        )}
-      </section>
-
-      {/* 3. Save & restart */}
-      <section
-        style={{
-          marginTop: "2rem",
-          padding: "1rem",
-          border: "1px solid #ddd",
-          borderRadius: 8,
-        }}
-      >
-        <h2>3. Save Token & Restart Bot Containers</h2>
-        <p>
-          This will write <code>FYERS_ACCESS_TOKEN</code> into{" "}
-          <code>credentials.env</code> and run{" "}
-          <code>docker compose up -d fyers-swing-bot penny-trader</code> in your
-          project root.
-        </p>
-        <button onClick={saveTokenAndRestart}>
-          Save token and restart Docker services
-        </button>
-      </section>
-
-      {/* 4. Test profile */}
-      <section
-        style={{
-          marginTop: "2rem",
-          padding: "1rem",
-          border: "1px solid #ddd",
-          borderRadius: 8,
-        }}
-      >
-        <h2>4. Test FYERS Profile</h2>
-        <p>
-          This uses the token currently in <code>credentials.env</code>,
-          exactly like your trading bot containers.
-        </p>
-        <button onClick={testProfile}>Test Profile</button>
-
-        {profileResp && (
-          <div style={{ marginTop: "1rem" }}>
-            <div>
-              Status:{" "}
-              <strong style={{ color: profileResp.ok ? "green" : "red" }}>
-                {profileResp.message}
-              </strong>
+          <button
+            className="btn btn-secondary"
+            onClick={handleExchangeCode}
+            disabled={isBusy("exchange")}
+          >
+            {isBusy("exchange") ? "Exchanging..." : "Exchange auth_code"}
+          </button>
+          {tokenResponse && (
+            <div className="panel panel-success">
+              <p>
+                <strong>Exchange result:</strong>
+              </p>
+              <textarea
+                className="mono"
+                rows={6}
+                readOnly
+                value={JSON.stringify(tokenResponse, null, 2)}
+              />
             </div>
-            <pre
-              style={{
-                marginTop: "0.5rem",
-                maxHeight: 300,
-                overflow: "auto",
-                background: "#f7f7f7",
-                padding: "0.75rem",
-                fontSize: 12,
-              }}
-            >
-              {JSON.stringify(profileResp.raw, null, 2)}
-            </pre>
-          </div>
-        )}
-      </section>
+          )}
+        </section>
+      </div>
 
-      {/* Status area */}
-      <section style={{ marginTop: "2rem" }}>
-        <h2>Status</h2>
-        <pre
-          style={{
-            background: "#f0f0f0",
-            padding: "0.75rem",
-            minHeight: 60,
-            whiteSpace: "pre-wrap",
-          }}
-        >
-          {status || "Idle."}
-        </pre>
-      </section>
+      {/* Row 2: Save token + Test profile */}
+      <div className="grid">
+        <section className="card">
+          <h2>3. Save Token & Restart Docker</h2>
+          <p>
+            Writes <code>FYERS_ACCESS_TOKEN</code> into{" "}
+            <code>credentials.env</code> and restarts{" "}
+            <code>fyers-swing-bot</code> & <code>penny-trader</code>.
+          </p>
+          <button
+            className="btn btn-success"
+            onClick={handleSaveToken}
+            disabled={isBusy("save-token") || !tokenResponse?.access_token}
+          >
+            {isBusy("save-token")
+              ? "Saving & restarting..."
+              : "Save Token & Restart Services"}
+          </button>
+          {savedTokenInfo && (
+            <div className="panel panel-success">
+              <p>{savedTokenInfo.message}</p>
+              {savedTokenInfo.docker_output && (
+                <textarea
+                  className="mono"
+                  rows={5}
+                  readOnly
+                  value={savedTokenInfo.docker_output}
+                />
+              )}
+            </div>
+          )}
+        </section>
+
+        <section className="card">
+          <h2>4. Test FYERS Profile</h2>
+          <p>
+            Uses the token currently in <code>credentials.env</code>, exactly
+            like your trading bot containers.
+          </p>
+          <button
+            className="btn btn-secondary"
+            onClick={handleTestProfile}
+            disabled={isBusy("profile")}
+          >
+            {isBusy("profile") ? "Checking..." : "Test Profile"}
+          </button>
+          {profileInfo && (
+            <div
+              className={
+                "panel " +
+                (profileInfo.ok ? "panel-success" : "panel-warning")
+              }
+            >
+              <p>
+                <strong>Status:</strong> {profileInfo.message}
+              </p>
+              <textarea
+                className="mono"
+                rows={6}
+                readOnly
+                value={JSON.stringify(profileInfo.raw, null, 2)}
+              />
+            </div>
+          )}
+        </section>
+      </div>
+
+      {/* Row 3: Recommendations & Executed */}
+      <div className="grid">
+        <section className="card">
+          <h2>5. View Recommendations</h2>
+          <p>
+            Shows <code>data/penny_recommendations.csv</code> as parsed by
+            pandas.
+          </p>
+          <button
+            className="btn btn-secondary"
+            onClick={handleLoadRecommendations}
+            disabled={isBusy("reco")}
+          >
+            {isBusy("reco") ? "Loading..." : "Load Recommendations"}
+          </button>
+          {recoRows && recoRows.length > 0 && (
+            <div className="table-wrapper">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    {Object.keys(recoRows[0]).map((col) => (
+                      <th key={col}>{col}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {recoRows.map((row, idx) => (
+                    <tr key={idx}>
+                      {Object.keys(recoRows[0]).map((col) => (
+                        <td key={col}>{String(row[col] ?? "")}</td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+
+        <section className="card">
+          <h2>6. View & Clean Executed Trades</h2>
+          <p>
+            Reads <code>data/penny_trades_executed.csv</code>. You can clear
+            failed/error rows to keep the log clean.
+          </p>
+          <div className="button-row">
+            <button
+              className="btn btn-secondary"
+              onClick={handleLoadExecuted}
+              disabled={isBusy("exec")}
+            >
+              {isBusy("exec") ? "Loading..." : "Load Executed Trades"}
+            </button>
+            <button
+              className="btn btn-danger"
+              onClick={handleClearErrorExec}
+              disabled={isBusy("clear-exec")}
+            >
+              {isBusy("clear-exec") ? "Clearing..." : "Clear Error Executions"}
+            </button>
+          </div>
+
+          {clearExecInfo && (
+            <div className="panel panel-warning">
+              <p>{clearExecInfo.message}</p>
+            </div>
+          )}
+
+          {execRows && execRows.length > 0 && (
+            <div className="table-wrapper">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    {Object.keys(execRows[0]).map((col) => (
+                      <th key={col}>{col}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {execRows.map((row, idx) => (
+                    <tr key={idx}>
+                      {Object.keys(execRows[0]).map((col) => (
+                        <td key={col}>{String(row[col] ?? "")}</td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+      </div>
+
+      {/* Row 4: Manual order + Run scanner */}
+      <div className="grid">
+        <section className="card">
+          <h2>7. Quick Manual Market Order</h2>
+          <p>
+            Places a simple CNC market order via FYERS using the dashboard
+            token.
+          </p>
+          <div className="form-grid">
+            <label>
+              FYERS Symbol
+              <input
+                type="text"
+                value={orderForm.fyers_symbol}
+                onChange={(e) =>
+                  handleOrderFormChange("fyers_symbol", e.target.value)
+                }
+                placeholder="NSE:SYNCOMF-EQ"
+              />
+            </label>
+            <label>
+              Side
+              <select
+                value={orderForm.side}
+                onChange={(e) =>
+                  handleOrderFormChange("side", e.target.value)
+                }
+              >
+                <option value="BUY">BUY</option>
+                <option value="SELL">SELL</option>
+              </select>
+            </label>
+            <label>
+              Quantity
+              <input
+                type="number"
+                min="1"
+                value={orderForm.qty}
+                onChange={(e) =>
+                  handleOrderFormChange("qty", e.target.value)
+                }
+              />
+            </label>
+          </div>
+          <button
+            className="btn btn-primary"
+            onClick={handlePlaceOrder}
+            disabled={isBusy("place-order")}
+          >
+            {isBusy("place-order") ? "Placing..." : "Place Order"}
+          </button>
+
+          {orderResult && (
+            <div
+              className={
+                "panel " +
+                (orderResult.ok ? "panel-success" : "panel-warning")
+              }
+            >
+              <p>
+                <strong>{orderResult.ok ? "Order OK" : "Order Error"}</strong>:{" "}
+                {orderResult.message}
+              </p>
+              <textarea
+                className="mono"
+                rows={6}
+                readOnly
+                value={JSON.stringify(orderResult.raw, null, 2)}
+              />
+            </div>
+          )}
+        </section>
+
+        <section className="card">
+          <h2>8. Run Scanner Now</h2>
+          <p>
+            Runs <code>scripts/penny_scanner.py</code> inside{" "}
+            <code>fyers-swing-bot</code>, using the same environment as your
+            live engine.
+          </p>
+          <button
+            className="btn btn-secondary"
+            onClick={handleRunScanner}
+            disabled={isBusy("scanner")}
+          >
+            {isBusy("scanner") ? "Running..." : "Run Scanner Now"}
+          </button>
+
+          {scannerResult && (
+            <div
+              className={
+                "panel " +
+                (scannerResult.ok ? "panel-success" : "panel-warning")
+              }
+              style={{ marginTop: "0.9rem" }}
+            >
+              <p>
+                <strong>Status:</strong> {scannerResult.message} (exit code{" "}
+                {scannerResult.return_code})
+              </p>
+
+              {scannerResult.stdout && (
+                <>
+                  <p>
+                    <strong>stdout</strong>
+                  </p>
+                  <textarea
+                    className="mono"
+                    rows={8}
+                    readOnly
+                    value={scannerResult.stdout}
+                  />
+                </>
+              )}
+
+              {scannerResult.stderr && (
+                <>
+                  <p>
+                    <strong>stderr</strong>
+                  </p>
+                  <textarea
+                    className="mono"
+                    rows={6}
+                    readOnly
+                    value={scannerResult.stderr}
+                  />
+                </>
+              )}
+            </div>
+          )}
+        </section>
+      </div>
     </div>
   );
 }
