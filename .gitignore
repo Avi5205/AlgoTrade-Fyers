@@ -1,0 +1,132 @@
+# =============================================================================
+# SENSITIVE DATA & CREDENTIALS
+# =============================================================================
+.env
+.env.local
+.env.prod
+.env.*.local
+config/credentials.env
+config/*.key
+config/*.pem
+
+# =============================================================================
+# PYTHON & VIRTUAL ENVIRONMENTS
+# =============================================================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# =============================================================================
+# RUNTIME DATA & ARTIFACTS
+# =============================================================================
+data/*.csv
+data/*.json
+data/*.bak
+data/*.xlsx
+!data/.gitkeep
+logs/*
+!logs/.gitkeep
+
+# =============================================================================
+# DOCKER & CONTAINER ARTIFACTS
+# =============================================================================
+.dockerignore
+docker-compose.yml.bak
+docker-compose.yml.auto.bak
+docker-compose.override.yml
+
+# =============================================================================
+# IDE & EDITOR FILES
+# =============================================================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+.project
+.pydevproject
+.settings/
+*.sublime-project
+*.sublime-workspace
+
+# =============================================================================
+# OS-SPECIFIC FILES
+# =============================================================================
+.DS_Store
+Thumbs.db
+*.log
+*.pid
+
+# =============================================================================
+# BACKUP & TEMPORARY FILES
+# =============================================================================
+*.bak
+*.backup
+*.tmp
+*.temp
+*~
+*.orig
+.#*
+
+# =============================================================================
+# TEST & COVERAGE
+# =============================================================================
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# =============================================================================
+# JUPYTER NOTEBOOKS
+# =============================================================================
+.ipynb_checkpoints/
+*.ipynb
+
+# =============================================================================
+# SENSITIVE TRADING & EXECUTION LOGS
+# =============================================================================
+data/penny_trades_executed.csv
+data/penny_executed_log.csv
+data/penny_open_positions.json
+
+# =============================================================================
+# LARGE OR GENERATED DATA FILES (Keep structure, ignore content)
+# =============================================================================
+data/eod_prices.csv
+data/profitability_report*.csv
+data/penny_scan_report.csv
+data/penny_recommendations.csv
+data/penny_fundamentals.csv
