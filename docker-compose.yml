@@ -40,3 +40,40 @@ services:
       - ./data:/app/data
     command: ["python", "scripts/penny_auto_trader.py"]
     restart: unless-stopped
+
+auth-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fyers-auth-backend
+    working_dir: /app
+    command: >
+      uvicorn auth-dashboard.backend.main:app
+      --host 0.0.0.0
+      --port 8000
+    env_file:
+      - ./config/credentials.env
+    volumes:
+      - .:/app
+      - ./logs:/app/logs
+    ports:
+      - "8000:8000"
+    depends_on:
+      - fyers-swing-bot   # optional; remove if you want it fully independent
+
+auth-frontend:
+    image: node:20-alpine
+    container_name: fyers-auth-frontend
+    working_dir: /app
+    command: >
+      sh -c "cd auth-dashboard/frontend
+      && npm install
+      && npm run dev -- --host 0.0.0.0 --port 5173"
+    volumes:
+      - .:/app
+    ports:
+      - "5173:5173"
+    environment:
+      - NODE_ENV=development
+    depends_on:
+      - auth-backend

@@ -54,6 +54,7 @@ data/*.xlsx
 !data/.gitkeep
 logs/*
 !logs/.gitkeep
+*.sh
 
 # =============================================================================
 # DOCKER & CONTAINER ARTIFACTS

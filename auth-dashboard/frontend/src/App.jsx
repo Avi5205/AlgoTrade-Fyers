@@ -3,6 +3,18 @@ import "./App.css";
 
 const API_BASE = "http://127.0.0.1:8000";
 
+const API_ENDPOINTS = {
+  AUTH_URL: "/api/auth-url",
+  EXCHANGE: "/api/exchange",
+  SAVE_TOKEN: "/api/save-token",
+  PROFILE: "/api/test-profile",
+  RECOMMENDATIONS: "/api/recommendations",
+  EXECUTED: "/api/executed",
+  CLEAR_ERRORS: "/api/clear-error-executions",
+  PLACE_ORDER: "/api/place-order",
+  RUN_SCANNER: "/api/run-scanner",
+};
+
 async function apiCall(path, options = {}) {
   const res = await fetch(`${API_BASE}${path}`, {
     headers: { "Content-Type": "application/json" },
@@ -16,9 +28,28 @@ async function apiCall(path, options = {}) {
   return data;
 }
 
-function App() {
+function useApiCall() {
   const [loading, setLoading] = useState(null);
   const [errorMsg, setErrorMsg] = useState("");
+
+  const call = async (key, path, options = {}) => {
+    try {
+      setErrorMsg("");
+      setLoading(key);
+      return await apiCall(path, options);
+    } catch (err) {
+      setErrorMsg(err.message);
+      throw err;
+    } finally {
+      setLoading(null);
+    }
+  };
+
+  return { call, loading, errorMsg, setErrorMsg };
+}
+
+function App() {
+  const { call, loading, errorMsg, setErrorMsg } = useApiCall();
 
   const [loginUrl, setLoginUrl] = useState("");
   const [authCode, setAuthCode] = useState("");
@@ -46,7 +77,7 @@ function App() {
       setSavedTokenInfo(null);
       setProfileInfo(null);
       setLoading("auth-url");
-      const data = await apiCall("/api/auth-url");
+      const data = await call("auth-url", API_ENDPOINTS.AUTH_URL);
       setLoginUrl(data.login_url);
     } catch (err) {
       setErrorMsg(err.message);
@@ -60,7 +91,7 @@ function App() {
       setErrorMsg("");
       setLoading("exchange");
       setTokenResponse(null);
-      const data = await apiCall("/api/exchange", {
+      const data = await call("exchange", API_ENDPOINTS.EXCHANGE, {
         method: "POST",
         body: JSON.stringify({ auth_code: authCode }),
       });
@@ -80,7 +111,7 @@ function App() {
     try {
       setErrorMsg("");
       setLoading("save-token");
-      const data = await apiCall("/api/save-token", {
+      const data = await call("save-token", API_ENDPOINTS.SAVE_TOKEN, {
         method: "POST",
         body: JSON.stringify({
           access_token: tokenResponse.access_token,
@@ -99,7 +130,7 @@ function App() {
     try {
       setErrorMsg("");
       setLoading("profile");
-      const data = await apiCall("/api/test-profile");
+      const data = await call("profile", API_ENDPOINTS.PROFILE);
       setProfileInfo(data);
     } catch (err) {
       setErrorMsg(err.message);
@@ -112,7 +143,7 @@ function App() {
     try {
       setErrorMsg("");
       setLoading("reco");
-      const data = await apiCall("/api/recommendations");
+      const data = await call("reco", API_ENDPOINTS.RECOMMENDATIONS);
       setRecoRows(data.rows || []);
     } catch (err) {
       setErrorMsg(err.message);
@@ -125,7 +156,7 @@ function App() {
     try {
       setErrorMsg("");
       setLoading("exec");
-      const data = await apiCall("/api/executed");
+      const data = await call("exec", API_ENDPOINTS.EXECUTED);
       setExecRows(data.rows || []);
     } catch (err) {
       setErrorMsg(err.message);
@@ -138,11 +169,11 @@ function App() {
     try {
       setErrorMsg("");
       setLoading("clear-exec");
-      const data = await apiCall("/api/clear-error-executions", {
+      const data = await call("clear-exec", API_ENDPOINTS.CLEAR_ERRORS, {
         method: "POST",
       });
       setClearExecInfo(data);
-      const refreshed = await apiCall("/api/executed");
+      const refreshed = await call("exec", API_ENDPOINTS.EXECUTED);
       setExecRows(refreshed.rows || []);
     } catch (err) {
       setErrorMsg(err.message);
@@ -158,6 +189,12 @@ function App() {
     }));
   };
 
+  const validateOrder = (form) => {
+    if (!form.fyers_symbol.trim()) return "FYERS Symbol is required";
+    if (!form.qty || form.qty <= 0) return "Quantity must be positive";
+    return null;
+  };
+
   const handlePlaceOrder = async () => {
     try {
       setErrorMsg("");
@@ -168,7 +205,7 @@ function App() {
         side: orderForm.side,
         qty: Number(orderForm.qty) || 0,
       };
-      const data = await apiCall("/api/place-order", {
+      const data = await call("place-order", API_ENDPOINTS.PLACE_ORDER, {
         method: "POST",
         body: JSON.stringify(payload),
       });
@@ -185,7 +222,7 @@ function App() {
       setErrorMsg("");
       setScannerResult(null);
       setLoading("scanner");
-      const data = await apiCall("/api/run-scanner", {
+      const data = await call("scanner", API_ENDPOINTS.RUN_SCANNER, {
         method: "POST",
       });
       setScannerResult(data);

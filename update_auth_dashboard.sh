@@ -1027,18 +1027,12 @@ main() {
   update_frontend_css
 
   log "Done. Next steps:"
-  echo
-  echo "  1) Backend:"
-  echo "       cd \"$BACKEND_DIR\""
-  echo "       python3 -m venv .venv  # if not created"
-  echo "       source .venv/bin/activate"
-  echo "       pip install -r requirements.txt"
-  echo "       uvicorn main:app --reload --port 8000"
-  echo
-  echo "  2) Frontend:"
-  echo "       cd \"$FRONTEND_DIR\""
-  echo "       npm install   # if not already done"
-  echo "       npm run dev   # opens http://localhost:5173"
+  echo "[auth-dashboard] Code updated."
+  echo "[auth-dashboard] To rebuild & run everything fully in Docker:"
+  echo "  cd ${PROJECT_ROOT}"
+  echo "  docker compose up -d --build auth-backend auth-frontend fyers-swing-bot penny-trader"
+  echo "[auth-dashboard] Or run: ${TOP_DIR}/docker_reset_and_rebuild.sh"
+
 }
 
 main "$@"
