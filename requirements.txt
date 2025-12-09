@@ -6,3 +6,6 @@ apscheduler
 pyyaml
 requests
 yfinance
+python-multipart
+fastapi
+uvicorn[standard]

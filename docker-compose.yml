@@ -30,18 +30,7 @@ services:
     command: ["python", "scripts/penny_reco_scheduler.py"]
     restart: unless-stopped
 
-  penny-trader:
-    build: .
-    container_name: fyers-penny-trader
-    env_file:
-      - ./config/credentials.env
-    volumes:
-      - ./logs:/app/logs
-      - ./data:/app/data
-    command: ["python", "scripts/penny_auto_trader.py"]
-    restart: unless-stopped
-
-auth-backend:
+  auth-backend:
     build:
       context: .
       dockerfile: Dockerfile
@@ -61,7 +50,7 @@ auth-backend:
     depends_on:
       - fyers-swing-bot   # optional; remove if you want it fully independent
 
-auth-frontend:
+  auth-frontend:
     image: node:20-alpine
     container_name: fyers-auth-frontend
     working_dir: /app
@@ -76,4 +65,16 @@ auth-frontend:
     environment:
       - NODE_ENV=development
     depends_on:
-      - auth-backend
+      - auth-backend  
+
+  penny-trader:
+    build: .
+    container_name: fyers-penny-trader
+    env_file:
+      - ./config/credentials.env
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data
+    command: ["python", "scripts/penny_auto_trader.py"]
+    restart: unless-stopped
+    
